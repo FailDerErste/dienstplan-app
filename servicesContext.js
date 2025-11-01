@@ -11,29 +11,29 @@ const [reloadKey, setReloadKey] = useState(0); // 🔄 for forcing re-render on 
 const [overrides, setOverrides] = useState({}); // per-date overrides for calendar entries
 
   // Initialdaten laden mit Migration
-  useEffect(() => {
-    (async () => {
-      try {
-        const s = await AsyncStorage.getItem('services');
-        const a = await AsyncStorage.getItem('assignments');
-        const f = await AsyncStorage.getItem('timeFormat');
-        const o = await AsyncStorage.getItem('overrides');
-        if (s) setServices(JSON.parse(s));
-        if (a) setAssignments(JSON.parse(a));
-        if (f) setIs24h(f === '24');
-        if (o) setOverrides(JSON.parse(o));
-        // Migration: Ensure all services have required fields
-        setServices(prev => prev.map(svc => ({
-          ...svc,
-          desc: svc.desc || '',
-          start: svc.start || '',
-          end: svc.end || '',
-        })));
-      } catch (e) {
-        console.warn(e);
-      }
-    })();
-  }, []);
+   useEffect(() => {
+     (async () => {
+       try {
+         const s = await AsyncStorage.getItem('services');
+         const a = await AsyncStorage.getItem('assignments');
+         const f = await AsyncStorage.getItem('timeFormat');
+         const o = await AsyncStorage.getItem('overrides');
+         if (s) setServices(JSON.parse(s));
+         if (a) setAssignments(JSON.parse(a));
+         if (f) setIs24h(f === '24');
+         if (o) setOverrides(JSON.parse(o));
+         // Migration: Ensure all services have required fields
+         setServices(prev => prev.map(svc => ({
+           ...svc,
+           desc: svc.desc || '',
+           start: svc.start || '',
+           end: svc.end || '',
+         })));
+       } catch (e) {
+         console.warn(e);
+       }
+     })();
+   }, []);
 
   // Änderungen speichern
   useEffect(() => {

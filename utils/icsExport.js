@@ -1,4 +1,6 @@
-import * as FileSystem from 'expo-file-system/legacy';
+//import RNFS from 'react-native-fs';
+import FileViewer from 'react-native-file-viewer';
+import { Platform } from 'react-native';
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 dayjs.extend(utc);
@@ -39,9 +41,21 @@ export async function exportToICS(services, assignments, overrides) {
 
   icsContent += 'END:VCALENDAR';
 
-  // Datei speichern
-  const fileUri = FileSystem.documentDirectory + `dienstplan_${dayjs().format('YYYYMMDD_HHmm')}.ics`;
-  await FileSystem.writeAsStringAsync(fileUri, icsContent, { encoding: FileSystem.EncodingType.UTF8 });
+  // 📂 Datei-Pfad bestimmen
+  const filename = `dienstplan_${dayjs().format('YYYYMMDD_HHmm')}.ics`;
+  const separator = Platform.OS === 'android' ? '/' : '';
+  const filePath = `${RNFS.TemporaryDirectoryPath}${separator}${filename}`;
 
-  return fileUri;
+  // 📝 Datei speichern
+  await RNFS.writeFile(filePath, icsContent, 'utf8');
+
+  try {
+    // 📅 Datei öffnen — Android fragt automatisch nach Kalender-App
+    await FileViewer.open(filePath, { showOpenWithDialog: true });
+  } catch (error) {
+    console.error('Fehler beim Öffnen der ICS-Datei:', error);
+    return filePath;
+  }
+
+  return filePath;
 }
