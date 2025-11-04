@@ -1,4 +1,4 @@
-import React, { useContext } from 'react';
+import { useContext } from 'react';
 import { View, TouchableOpacity, Text, StyleSheet } from 'react-native';
 import { ServicesContext } from '../servicesContext';
 import { useTheme } from '../ThemeContext';

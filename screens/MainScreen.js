@@ -1,17 +1,12 @@
-import React, { useContext, useState, useMemo, useRef, useEffect } from 'react';
+import { useContext, useState, useRef, useEffect } from 'react';
 import { View, Text, Button, StyleSheet, TextInput, TouchableOpacity, Platform } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { formatTime as formatTimeUtil } from '../utils/formatTime';
 import { ServicesContext } from '../servicesContext';
 import CalendarMonth from '../components/CalendarMonth';
 import ServiceList from '../components/ServiceList';
-import { exportToICS } from '../utils/icsExport';
 import { useDialog } from '../components/AppDialog';
 import { useTheme } from '../ThemeContext';
-import dayjs from 'dayjs';
-import * as FileSystem from 'expo-file-system';
-import * as Sharing from 'expo-sharing';
-import { openURL } from 'expo-linking';
 let _intentLauncherModule = null;
 
 async function getIntentLauncherModule() {
@@ -146,16 +141,18 @@ export default function MainScreen({ navigation }) {
     return (
       <View>
         <TextInput
-          style={[styles.input, { color: colors.text, borderColor: colors.border }]}
           placeholder="Dienstname"
+          placeholderTextColor={colors.border}
           value={name}
           onChangeText={setName}
+          style={[styles.input, { color: colors.text, borderColor: colors.border }]}
         />
         <TextInput
-          style={[styles.input, { color: colors.text, borderColor: colors.border }]}
           placeholder="Beschreibung"
+          placeholderTextColor={colors.border}
           value={desc}
           onChangeText={setDesc}
+          style={[styles.input, { color: colors.text, borderColor: colors.border }]}
         />
 
         <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginVertical: 8 }}>
@@ -270,72 +267,23 @@ export default function MainScreen({ navigation }) {
           onPress: async () => {
             if (isExporting.current) return;
             isExporting.current = true;
+
             try {
-              const fileUri = await exportToICS(services, assignments, overrides);
-
-              if (Platform.OS === 'ios') {
-                // On iOS, try to open directly in calendar app
-                try {
-                  await openURL(fileUri);
-                } catch (error) {
-                  // Fallback to sharing
-                  if (await Sharing.isAvailableAsync()) {
-                    await Sharing.shareAsync(fileUri, {
-                      mimeType: 'text/calendar',
-                      dialogTitle: 'Dienstplan exportieren',
-                    });
-                  } else {
-                    showDialog('Export erfolgreich', `Die Datei wurde gespeichert unter:\n${fileUri}`);
-                  }
-                }
-              } else {
-                // 📱 Android: Sicherer Versuch, Kalender zu öffnen, ansonsten Sharing
-                try {
-                  const IntentLauncher = await getIntentLauncherModule();
-
-                  if (IntentLauncher) {
-                    console.log('[ICS Export] Android calendar open flow starting (secure)', { fileUri });
-
-                    // Erst Sharing-Link generieren (Expo erstellt content:// URI intern)
-                    if (await Sharing.isAvailableAsync()) {
-                      console.log('[ICS Export] Trying to share via calendar intent...');
-                      await Sharing.shareAsync(fileUri, {
-                        mimeType: 'text/calendar',
-                        dialogTitle: 'Dienstplan öffnen mit...',
-                      });
-                    } else {
-                      // Letzter Fallback: Nur den Pfad anzeigen
-                      showDialog('Export erfolgreich', `Die Datei wurde gespeichert unter:\n${fileUri}`);
-                    }
-                  } else {
-                    // Wenn kein IntentLauncher verfügbar, direkt Sharing verwenden
-                    if (await Sharing.isAvailableAsync()) {
-                      await Sharing.shareAsync(fileUri, {
-                        mimeType: 'text/calendar',
-                        dialogTitle: 'Dienstplan öffnen mit...',
-                      });
-                    } else {
-                      showDialog('Export erfolgreich', `Die Datei wurde gespeichert unter:\n${fileUri}`);
-                    }
-                  }
-                } catch (error) {
-                  console.log('[ICS Export] Fehler beim Öffnen im Kalender, fallback Sharing:', error);
-                  if (await Sharing.isAvailableAsync()) {
-                    await Sharing.shareAsync(fileUri, {
-                      mimeType: 'text/calendar',
-                      dialogTitle: 'Dienstplan öffnen mit...',
-                    });
-                  } else {
-                    showDialog('Export erfolgreich', `Die Datei wurde gespeichert unter:\n${fileUri}`);
-                  }
-                }
-              }
-            } catch (error) {
-              console.error('Export-Fehler:', error);
-              showDialog('Fehler beim Export', 'Die Datei konnte nicht erstellt werden.');
-            } finally {
-              isExporting.current = false;
+            if (Platform.OS === 'ios') {
+              const { exportToCalendar } = await import('../utils/exportToCalendar');
+              const count = await exportToCalendar(services, assignments, overrides);
+              showDialog('Export abgeschlossen', `${count} Termine wurden dem Kalender hinzugefügt.`);
+            } else {
+              const { exportToICS } = await import('../utils/exportToICS');
+              const uri = await exportToICS(services, assignments, overrides);
+              showDialog('Export abgeschlossen', `Die Datei wurde gespeichert unter:\n${uri}`);
             }
+          } catch (error) {
+            console.error('Export-Fehler:', error);
+            showDialog('Fehler beim Export', 'Die Datei konnte nicht erstellt oder geöffnet werden.');
+          } finally {
+            isExporting.current = false;
+          }
           },
         },
       ]

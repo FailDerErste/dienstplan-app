@@ -1,7 +1,7 @@
 // SettingsScreen: A screen to configure and manage and display the list of services
 // (Dienste) for the Dienstplan app. It supports creating, editing, and deleting services,
 // choosing a theme, switching time formats (24h vs 12h), and setting a color for each service.
-import React, { useContext, useState, useRef, useEffect } from 'react';
+import { useContext, useState, useRef, useEffect } from 'react';
 import {
   View,
   Text,

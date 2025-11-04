@@ -13,6 +13,10 @@ const [overrides, setOverrides] = useState({}); // per-date overrides for calend
   // Initialdaten laden mit Migration
    useEffect(() => {
      (async () => {
+
+       // Die folgende Zeile einmalig vor dem build der .apk aktivieren, um alle Daten zu löschen.
+       //await AsyncStorage.clear();
+       
        try {
          const s = await AsyncStorage.getItem('services');
          const a = await AsyncStorage.getItem('assignments');

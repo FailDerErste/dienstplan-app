@@ -10,11 +10,11 @@ import { useTheme } from './ThemeContext';
 // Optional: einfache Sprachlogik
 const translations = {
   de: {
-    mainTitle: 'Dienstplan',
+    mainTitle: 'Dienstplan Import',
     settingsTitle: 'Einstellungen',
   },
   en: {
-    mainTitle: 'Schedule',
+    mainTitle: 'Schedule Import',
     settingsTitle: 'Settings',
   },
 };
