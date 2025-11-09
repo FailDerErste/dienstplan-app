@@ -255,12 +255,12 @@ export default function SettingsScreen() {
   const handleSave = () => {
     // Validate name
     if (!name.trim()) {
-      showDialog(t(settingsServiceErrorTitle), t(settingsServiceErrorTextName));
+      showDialog(t('settingsServiceErrorTitle'), t('settingsServiceErrorTextName'));
       return;
     }
     // Validate times - require both start and end for new services
     if (!start.trim() || !end.trim()) {
-      showDialog(t(settingsServiceErrorTitle), t(settingsServiceErrorTextTime));
+      showDialog(t('settingsServiceErrorTitle'), t('settingsServiceErrorTextTime'));
       return;
     }
 
@@ -269,10 +269,10 @@ export default function SettingsScreen() {
 
     if (editId) {
       updateService(editId, { name, desc, start, end, color: sanitizedColor });
-      showDialog(t(settingsServiceSaved), t(settingsServiceSevedEdit));
+      showDialog(t('settingsServiceSaved'), t('settingsServiceSavedEdit'));
     } else {
       addService({ name, desc, start, end, color: sanitizedColor });
-      showDialog(t(settingsServiceSaved), t(settingsServiceSevedNew));
+      showDialog(t('settingsServiceSaved'), t('settingsServiceSavedNew'));
     }
 
     resetForm();
