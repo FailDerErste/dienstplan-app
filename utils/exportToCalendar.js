@@ -1,13 +1,14 @@
 import * as Calendar from 'expo-calendar';
 import dayjs from 'dayjs';
+import i18n from '../i18n';
 
 export async function exportToCalendar(services, assignments, overrides) {
   const { status } = await Calendar.requestCalendarPermissionsAsync();
-  if (status !== 'granted') throw new Error('Kalenderzugriff verweigert.');
+  if (status !== 'granted') throw new Error(i18n.t('exRightsError'));
 
   const calendars = await Calendar.getCalendarsAsync();
   const defaultCalendar = calendars.find(c => c.allowsModifications) || calendars[0];
-  if (!defaultCalendar) throw new Error('Kein bearbeitbarer Kalender gefunden.');
+  if (!defaultCalendar) throw new Error(i18n.t('exCalNotFound'));
 
   let added = 0;
 

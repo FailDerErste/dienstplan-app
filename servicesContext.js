@@ -1,5 +1,7 @@
-import React, { createContext, useState, useEffect } from 'react';
+import { createContext, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useTranslation } from 'react-i18next';
+
 
 export const ServicesContext = createContext();
 
@@ -9,6 +11,7 @@ const [assignments, setAssignments] = useState({}); // { '2025-10-14': serviceId
 const [is24h, setIs24h] = useState(true); // 🔄 globales Zeitformat
 const [reloadKey, setReloadKey] = useState(0); // 🔄 for forcing re-render on time format change
 const [overrides, setOverrides] = useState({}); // per-date overrides for calendar entries
+const { t } = useTranslation();
 
   // Initialdaten laden mit Migration
    useEffect(() => {
@@ -111,25 +114,25 @@ const [overrides, setOverrides] = useState({}); // per-date overrides for calend
     Object.entries(assignments).forEach(([date, serviceId]) => {
       const service = services.find(s => s.id === serviceId);
       if (!service) {
-        issues.push(`Orphaned assignment on ${date}: service ${serviceId} not found`);
+        issues.push(t('validOrphanedService', { date, serviceId }));
       }
     });
     // Check for invalid time formats
     services.forEach(svc => {
       if (svc.start && !/^([01]\d|2[0-3]):([0-5]\d)$/.test(svc.start)) {
-        issues.push(`Invalid start time for service "${svc.name}": ${svc.start}`);
+        issues.push(t('validInvalidTimeStart', { svcName: svc.name, svcStart: svc.start }));
       }
       if (svc.end && !/^([01]\d|2[0-3]):([0-5]\d)$/.test(svc.end)) {
-        issues.push(`Invalid end time for service "${svc.name}": ${svc.end}`);
+        issues.push(t('validInvalidTimeEnd', { svcName: svc.name, svcEnd: svc.end }));
       }
     });
     // Check overrides for invalid times
     Object.entries(overrides).forEach(([date, over]) => {
       if (over.start && !/^([01]\d|2[0-3]):([0-5]\d)$/.test(over.start)) {
-        issues.push(`Invalid override start time on ${date}: ${over.start}`);
+        issues.push(t('validOverrideTimeStart', { date, overStart: over.start }));
       }
       if (over.end && !/^([01]\d|2[0-3]):([0-5]\d)$/.test(over.end)) {
-        issues.push(`Invalid override end time on ${date}: ${over.end}`);
+        issues.push(t('validOverrideTimeEnd', { date, overEnd: over.end }));
       }
     });
     return issues;

@@ -18,7 +18,7 @@ const lightTheme = {
   colors: {
     ...baseColors,
     background: '#FFFFFF',
-    card: '#F8F8F8',
+    card: '#f0f0f0ff',
     text: '#000000',
     primary: '#2E86C1',
     border: '#aaa',

@@ -1,14 +1,16 @@
 //import RNFS muss für die Benützung auf EXPO deaktiviert sein, siehe Erklärung weiter unten.
-import * as FileSystem from 'expo-file-system/legacy';
-import * as Sharing from 'expo-sharing';
+//import * as FileSystem from 'expo-file-system/legacy';
+//import * as Sharing from 'expo-sharing';
 import RNFS from 'react-native-fs';
 import FileViewer from 'react-native-file-viewer';
 import { Platform, Share } from 'react-native';
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
+import i18n from '../i18n';
 dayjs.extend(utc);
 
 export async function exportToICS(services, assignments, overrides) {
+  // 📅 ICS-Datei Inhalt erstellen
   let icsContent = `BEGIN:VCALENDAR\nVERSION:2.0\nCALSCALE:GREGORIAN\nPRODID:-//Dienstplan//DE\n`;
 
   for (const [date, serviceId] of Object.entries(assignments)) {
@@ -92,7 +94,7 @@ export async function exportToICS(services, assignments, overrides) {
     await FileSystem.makeDirectoryAsync(dirUri, { intermediates: true });
   }
 
-  const filename = `dienstplan_${dayjs().format('YYYYMMDD_HHmm')}.ics`;
+  const filename = `${i18n.t('exFileName')}_${dayjs().format('YYYYMMDD_HHmm')}.ics`;
   const fileUri = dirUri + filename;
 
   // 📝 Datei speichern
@@ -102,14 +104,14 @@ export async function exportToICS(services, assignments, overrides) {
   if (Platform.OS === 'android' && await Sharing.isAvailableAsync()) {
     await Sharing.shareAsync(fileUri, {
       mimeType: 'text/calendar',
-      dialogTitle: 'Dienstplan öffnen mit...',
+      dialogTitle: i18n.t('exFileOpen'),
     });
   }
 
   return fileUri;*/}
 
   // 📂 Datei-Pfad bestimmen (Codeblock .apk)
-  const filename = `dienstplan_${dayjs().format('YYYYMMDD_HHmm')}.ics`;
+  const filename = `${i18n.t('exFileName')}_${dayjs().format('YYYYMMDD_HHmm')}.ics`;
   const separator = Platform.OS === 'android' ? '/' : '';
   const filePath = `${RNFS.TemporaryDirectoryPath}${separator}${filename}`;
 
@@ -120,7 +122,7 @@ export async function exportToICS(services, assignments, overrides) {
     // 📅 Datei öffnen — Android fragt automatisch nach Kalender-App
     await FileViewer.open(filePath, { showOpenWithDialog: true });
   } catch (error) {
-    console.error('Fehler beim Öffnen der ICS-Datei:', error);
+    console.error(i18n.t('exFileError'), error);
     return filePath;
   }
 

@@ -1,35 +1,18 @@
 // AppNavigator.js
 import React from 'react';
-import { StatusBar, I18nManager } from 'react-native';
+import { StatusBar } from 'react-native';
 import { NavigationContainer, DefaultTheme, DarkTheme } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import MainScreen from './screens/MainScreen';
 import SettingsScreen from './screens/SettingsScreen';
 import { useTheme } from './ThemeContext';
-
-// Optional: einfache Sprachlogik
-const translations = {
-  de: {
-    mainTitle: 'Dienstplan Import',
-    settingsTitle: 'Einstellungen',
-  },
-  en: {
-    mainTitle: 'Schedule Import',
-    settingsTitle: 'Settings',
-  },
-};
-
-// Fallback: Deutsch
-const getLanguage = () => {
-  const locale = I18nManager.isRTL ? 'en' : 'de'; // du kannst das später dynamisch machen
-  return translations[locale] || translations.de;
-};
+import { useTranslation } from 'react-i18next';
 
 const Stack = createNativeStackNavigator();
 
 export default function AppNavigator() {
+  const { t } = useTranslation();
   const { colors, mode } = useTheme();
-  const t = getLanguage();
 
   // Grundlage: hell oder dunkel
   const baseTheme = mode === 'light' ? DefaultTheme : DarkTheme;
@@ -67,12 +50,12 @@ export default function AppNavigator() {
           <Stack.Screen
             name="Main"
             component={MainScreen}
-            options={{ title: t.mainTitle }}
+            options={{ title: t('msTitle') }}
           />
           <Stack.Screen
             name="Settings"
             component={SettingsScreen}
-            options={{ title: t.settingsTitle }}
+            options={{ title: t('settingsTitle') }}
           />
         </Stack.Navigator>
       </NavigationContainer>

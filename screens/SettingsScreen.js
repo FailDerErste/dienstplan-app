@@ -12,6 +12,7 @@ import {
   Platform,
   Switch,
   Animated,
+  Easing,
   ScrollView,
   KeyboardAvoidingView,
   Dimensions,
@@ -22,8 +23,14 @@ import { ServicesContext } from '../servicesContext';
 import { useDialog } from '../components/AppDialog';
 import { useTheme } from '../ThemeContext';
 import { formatTime as formatTimeUtil } from '../utils/formatTime';
+import { resetTutorial } from '../utils/tutorialStorage';
+import onboardingController from '../utils/onboardingController';
+import { setAppLanguage } from '../utils/languageStorage';
+import i18n from '../i18n';
+import { useTranslation } from 'react-i18next';
 
 export default function SettingsScreen() {
+  const { t } = useTranslation();
   // Dialog helper: used to show modal dialogs for validation feedback and confirmations
   const { showDialog } = useDialog();
   // Theme related hooks: current mode, a setter, and color values for styling
@@ -42,6 +49,7 @@ export default function SettingsScreen() {
   const [pickerMode, setPickerMode] = useState('start'); // Whether we are editing start or end time
   const [tempTime, setTempTime] = useState(new Date()); // Temporary time value for the picker
   const [showAddForm, setShowAddForm] = useState(false); // Show/hide the add/edit form
+  const [currentLanguage, setCurrentLanguage] = useState('en'); // Current app language
 
   // Responsive column widths based on screen size (Dimensions API)
   const [colWidths, setColWidths] = useState({ left: 180, mid: 120, right: 40 });
@@ -63,6 +71,11 @@ export default function SettingsScreen() {
     return () => subscription?.remove?.();
   }, []);
 
+  // Initialize current language from i18n
+  useEffect(() => {
+    setCurrentLanguage(i18n.language);
+  }, []);
+
   // Preset color options for services. Note: two entries labeled 'Orange' exist in original
   // code; this is retained for backward compatibility with existing data.
   const colorOptions = [
@@ -79,14 +92,64 @@ export default function SettingsScreen() {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(-20)).current;
   const scrollRef = useRef(null);
+  const [contentHeight, setContentHeight] = useState(0);
+  const [containerHeight, setContainerHeight] = useState(0);
 
   useEffect(() => {
-    Animated.timing(fadeAnim, { toValue: showAddForm ? 1 : 0, duration: 300, useNativeDriver: true }).start();
-    Animated.timing(slideAnim, { toValue: showAddForm ? 0 : -20, duration: 300, useNativeDriver: true }).start();
-    if (showAddForm && scrollRef.current) {
-      setTimeout(() => scrollRef.current.scrollToEnd({ animated: true }), 300);
+    const animationDuration = 400;
+
+    if (showAddForm) {
+      // Formular-Animation starten
+      Animated.parallel([
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: animationDuration,
+          easing: Easing.out(Easing.quad),
+          useNativeDriver: true,
+        }),
+        Animated.timing(slideAnim, {
+          toValue: 0,
+          duration: animationDuration,
+          easing: Easing.out(Easing.quad),
+          useNativeDriver: true,
+        }),
+      ]).start();
+
+      // 📜 Scroll während der Animation progressiv nach unten
+      let startTime = Date.now();
+
+      const animateScroll = () => {
+        const now = Date.now();
+        const progress = Math.min((now - startTime) / animationDuration, 1);
+        const eased = Easing.out(Easing.quad)(progress);
+
+        if (scrollRef.current && contentHeight > containerHeight) {
+          const scrollY = eased * (contentHeight - containerHeight);
+          scrollRef.current.scrollTo({ y: scrollY, animated: false });
+        }
+
+        if (progress < 1) requestAnimationFrame(animateScroll);
+      };
+
+      requestAnimationFrame(animateScroll);
+    } else {
+      // Formular ausblenden
+      Animated.parallel([
+        Animated.timing(fadeAnim, {
+          toValue: 0,
+          duration: 300,
+          easing: Easing.in(Easing.quad),
+          useNativeDriver: true,
+        }),
+        Animated.timing(slideAnim, {
+          toValue: -20,
+          duration: 300,
+          easing: Easing.in(Easing.quad),
+          useNativeDriver: true,
+        }),
+      ]).start();
     }
-  }, [showAddForm]);
+  }, [showAddForm, contentHeight, containerHeight]);
 
   // Format a Date object into a time string respecting 24h vs 12h preference
   const formatTime = (date) => {
@@ -192,12 +255,12 @@ export default function SettingsScreen() {
   const handleSave = () => {
     // Validate name
     if (!name.trim()) {
-      showDialog('Fehler', 'Bitte gib einen Namen für den Dienst ein.');
+      showDialog(t(settingsServiceErrorTitle), t(settingsServiceErrorTextName));
       return;
     }
     // Validate times - require both start and end for new services
     if (!start.trim() || !end.trim()) {
-      showDialog('Fehler', 'Bitte gib sowohl Start- als auch Endzeit ein.');
+      showDialog(t(settingsServiceErrorTitle), t(settingsServiceErrorTextTime));
       return;
     }
 
@@ -206,10 +269,10 @@ export default function SettingsScreen() {
 
     if (editId) {
       updateService(editId, { name, desc, start, end, color: sanitizedColor });
-      showDialog('Gespeichert', 'Dienst aktualisiert ✔️');
+      showDialog(t(settingsServiceSaved), t(settingsServiceSevedEdit));
     } else {
       addService({ name, desc, start, end, color: sanitizedColor });
-      showDialog('Gespeichert', 'Neuer Dienst hinzugefügt ✅');
+      showDialog(t(settingsServiceSaved), t(settingsServiceSevedNew));
     }
 
     resetForm();
@@ -241,28 +304,54 @@ export default function SettingsScreen() {
   // Confirmation dialog before deleting a service
   const confirmDelete = (id, serviceName) => {
     showDialog(
-      'Dienst löschen?',
-      `Möchtest du "${serviceName}" wirklich löschen?`,
+      t('settingsServiceDeleteTitle'),
+      t('settingsServiceDeleteText', { name: serviceName }),
       [
-        { text: 'Abbrechen', style: 'cancel' },
-        { text: 'Löschen', style: 'destructive', onPress: () => removeService(id) },
+        { text: t('btnCancel'), style: 'cancel' },
+        { text: t('settingsServiceDeleteBtn'), style: 'destructive', onPress: () => removeService(id) },
       ]
     );
+  };
+
+  // Handle rewatch tutorial
+  const handleRewatchTutorial = () => {
+    showDialog(
+      t('settingsTutorialTitle'),
+      t('settingsTutorialText'),
+      [
+        { text: t('btnCancel'), style: 'cancel' },
+        {
+          text: t('settingsTutorialBtn'),
+          onPress: async () => {
+            await resetTutorial();
+            onboardingController.triggerRestart();
+          },
+        },
+      ]
+    );
+  };
+
+  // Handle language change
+  const handleLanguageChange = async (value) => {
+    await setAppLanguage(value);
+    setCurrentLanguage(value);
   };
 
   return (
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
       <ScrollView
         ref={scrollRef}
-        contentContainerStyle={[styles.scrollContainer, { backgroundColor: colors.background }]}
+        onContentSizeChange={(_, h) => setContentHeight(h)}
+        onLayout={(e) => setContainerHeight(e.nativeEvent.layout.height)}
+        contentContainerStyle={[styles.scrollContainer, { backgroundColor: colors.background, paddingBottom: 60 }]}
         keyboardShouldPersistTaps="handled"
       >
         <View style={[styles.container, { backgroundColor: colors.background }]}>
-          <Text style={[styles.title, { color: colors.text }]}>Einstellungen</Text>
+          {/* <Text style={[styles.title, { color: colors.text }]}>{t('settingsTitle2')}</Text> */}
 
           {/* Theme Auswahl */}
-          <View style={{ marginBottom: 15 }}>
-            <Text style={[styles.label, { color: colors.text }]}>Theme</Text>
+          <View style={{ marginBottom: 12 }}>
+            <Text style={[styles.label, { color: colors.text }]}>{t('settingsTheme')}</Text>
             <View style={[styles.pickerContainer, { borderColor: colors.border }]}>
               <Picker
                 selectedValue={themeMode}
@@ -270,10 +359,26 @@ export default function SettingsScreen() {
                 style={{ color: colors.text }}
                 dropdownIconColor={colors.text}
               >
-                <Picker.Item label="System" value="system" />
-                <Picker.Item label="Hell" value="light" />
-                <Picker.Item label="Dunkelgrau" value="darkgray" />
-                <Picker.Item label="Dunkel" value="dark" />
+                <Picker.Item label={t('settingsThemeSystem')} value="system" />
+                <Picker.Item label={t('settingsThemeLight')} value="light" />
+                <Picker.Item label={t('settingsThemeDarkgray')} value="darkgray" />
+                <Picker.Item label={t('settingsThemeDark')} value="dark" />
+              </Picker>
+            </View>
+          </View>
+
+          {/* Sprache */}
+          <View style={{ marginBottom: 12 }}>
+            <Text style={[styles.label, { color: colors.text }]}>Sprache</Text>
+            <View style={[styles.pickerContainer, { borderColor: colors.border }]}>
+              <Picker
+                selectedValue={currentLanguage}
+                onValueChange={handleLanguageChange}
+                style={{ color: colors.text }}
+                dropdownIconColor={colors.text}
+              >
+                <Picker.Item label="Deutsch" value="de" />
+                <Picker.Item label="English" value="en" />
               </Picker>
             </View>
           </View>
@@ -284,9 +389,20 @@ export default function SettingsScreen() {
             <Switch value={is24h} onValueChange={toggleFormat} />
           </View>
 
+          {/* Tutorial Rewatch Button */}
+          <View style={{ marginBottom: 12 }}>
+            <Button
+              title={t('settingsTutorial')}
+              onPress={handleRewatchTutorial}
+              color={colors.primary}
+            />
+          </View>
+
+          <Text style={[{ marginTop: 40 }, styles.title, { color: colors.text }]}>Dienste</Text>
+
           {/* Formular-Button */}
           <Button
-            title={showAddForm ? 'Abbrechen' : 'Neuen Dienst hinzufügen'}
+            title={showAddForm ? t('btnCancel') : t('settingsAddService')}
             onPress={() => (showAddForm ? resetForm() : setShowAddForm(true))}
             color={showAddForm ? colors.border : colors.primary}
           />
@@ -300,14 +416,14 @@ export default function SettingsScreen() {
               ]}
             >
               <TextInput
-                placeholder="Name"
+                placeholder={t('ServiceName')}
                 placeholderTextColor={colors.border}
                 value={name}
                 onChangeText={setName}
                 style={[styles.input, { color: colors.text, borderColor: colors.border }]}
               />
               <TextInput
-                placeholder="Beschreibung (optional)"
+                placeholder={t('ServiceDesc')}
                 placeholderTextColor={colors.border}
                 value={desc}
                 onChangeText={setDesc}
@@ -340,12 +456,12 @@ export default function SettingsScreen() {
 
               <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginVertical: 8 }}>
                 <TouchableOpacity style={[styles.timeButton, { borderColor: colors.border }]} onPress={() => showPicker('start')}>
-                  <Text style={[styles.timeLabel, { color: colors.text }]}>Startzeit</Text>
+                  <Text style={[styles.timeLabel, { color: colors.text }]}>{t('ServiceTimeStart')}</Text>
                   <Text style={[styles.timeValue, { color: colors.text }]}>{start || '--:--'}</Text>
                 </TouchableOpacity>
                 <Text style={{ marginHorizontal: 10, color: colors.text }}>-</Text>
                 <TouchableOpacity style={[styles.timeButton, { borderColor: colors.border }]} onPress={() => showPicker('end')}>
-                  <Text style={[styles.timeLabel, { color: colors.text }]}>Endzeit</Text>
+                  <Text style={[styles.timeLabel, { color: colors.text }]}>{t('ServiceTimeEnd')}</Text>
                   <Text style={[styles.timeValue, { color: colors.text }]}>{end || '--:--'}</Text>
                 </TouchableOpacity>
               </View>
@@ -360,12 +476,12 @@ export default function SettingsScreen() {
                 />
               )}
 
-              <Button title={editId ? 'Änderungen speichern' : 'Dienst speichern'} onPress={handleSave} color={colors.success} />
+              <Button title={editId ? t('settingsEditServiceSave') : t('settingsAddServiceSave')} onPress={handleSave} color={colors.success} />
             </Animated.View>
           )}
 
           {/* Liste */}
-          <View style={{ marginTop: 20 }}>
+          <View style={{ marginTop: 20}}>
             {services.length === 0 ? (
               <Text style={{ color: colors.text, textAlign: 'center' }}>Noch keine Dienste vorhanden</Text>
             ) : (
@@ -388,7 +504,7 @@ export default function SettingsScreen() {
                         style={[styles.deleteButton, { width: colWidths.right }]}
                         onPress={() => confirmDelete(item.id, item.name)}
                       >
-                        <Text style={{ color: colors.danger, fontSize: 26 }}>−</Text>
+                        <Text style={[styles.deleteText, { color: colors.danger }]}>−</Text>
                       </TouchableOpacity>
                     </View>
                   </TouchableOpacity>
@@ -404,7 +520,7 @@ export default function SettingsScreen() {
 const styles = StyleSheet.create({
   scrollContainer: { flexGrow: 1 },
   container: { flex: 1, padding: 10 },
-  title: { fontSize: 22, fontWeight: 'bold', marginBottom: 10 },
+  title: { fontSize: 20, fontWeight: 'bold', marginBottom: 10 },
   label: { fontSize: 16, marginBottom: 5 },
   pickerContainer: { borderWidth: 1, borderRadius: 8, overflow: 'hidden' },
   formatRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 15 },
@@ -419,5 +535,6 @@ const styles = StyleSheet.create({
   leftCol: { width: 180, flexShrink: 0, flexDirection: 'row', alignItems: 'center' },
   midCol: { width: 120, alignItems: 'center' },
   deleteButton: { width: 40, alignItems: 'center', justifyContent: 'center' }, // fixed-width delete button
+  deleteText: { fontSize: 26 },
   serviceText: { fontSize: 16 },
 });

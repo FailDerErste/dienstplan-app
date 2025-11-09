@@ -7,6 +7,7 @@ import CalendarMonth from '../components/CalendarMonth';
 import ServiceList from '../components/ServiceList';
 import { useDialog } from '../components/AppDialog';
 import { useTheme } from '../ThemeContext';
+import { useTranslation } from 'react-i18next';
 let _intentLauncherModule = null;
 
 async function getIntentLauncherModule() {
@@ -22,6 +23,7 @@ async function getIntentLauncherModule() {
 }
 
 export default function MainScreen({ navigation }) {
+  const { t } = useTranslation();
   const { services, assignments, assignToDay, removeFromDay, clearAll, is24h, updateService, overrides, setDayOverride, removeDayOverride, validateAll } = useContext(ServicesContext);
   const { showDialog, closeDialog } = useDialog();
   const { colors } = useTheme();
@@ -33,12 +35,13 @@ export default function MainScreen({ navigation }) {
   const [editForms, setEditForms] = useState({}); // { '2025-10-14': { name, desc, start, end } }
   const [editDateIso, setEditDateIso] = useState(null);
   const [editDialogKey, setEditDialogKey] = useState(0);
+
   // Startup validation
   useEffect(() => {
     const issues = validateAll();
     if (issues.length > 0) {
-      const message = `Datenprobleme gefunden:\n\n${issues.join('\n')}\n\nBitte überprüfen Sie Ihre Daten.`;
-      showDialog('Validierungsfehler', message);
+      const message = `${t('msValidationText1')}\n\n${issues.join('\n')}\n\n${t('msValidationText2')}`;
+      showDialog(t('msValidationTitle'), message);
     }
   }, []);
 
@@ -53,7 +56,7 @@ export default function MainScreen({ navigation }) {
         const service = services.find((s) => s.id === serviceId);
         const over = overrides?.[date] ?? null;
         const isOverride = !!over;
-        const displayName = over?.name ?? (service ? service.name : 'Unbenannt');
+        const displayName = over?.name ?? (service ? service.name : t('msExportNoName'));
         const displayStart = formatTimeDisplay(over?.start ?? service?.start ?? '');
         const displayEnd = formatTimeDisplay(over?.end ?? service?.end ?? '');
         const truncatedName = displayName.length > 6 ? displayName.substring(0, 5) + '..' : displayName;
@@ -96,10 +99,10 @@ export default function MainScreen({ navigation }) {
     const displayEnd = overrideForDate?.end ?? (svc?.end ?? '');
     const start = formatTimeDisplay(displayStart);
     const end = formatTimeDisplay(displayEnd);
-    const message = `Dienst: ${displayName}\nBeschreibung: ${displayDesc}\nZeit: ${start} - ${end}`;
-    showDialog('Dienstdetails', message, [
-      { text: 'Schliessen', style: 'cancel' },
-      { text: 'Bearbeiten', onPress: () => showEditServiceDialog(svc, dateIso) },
+    const message = `${t('service')} ${displayName}\n${t('msServiceDetailsDesc')} ${displayDesc}\n${t('msServiceDetailsTime')} ${start} - ${end}`;
+    showDialog(t('msServiceDetails'), message, [
+      { text: t('btnClose'), style: 'cancel' },
+      { text: t('msServiceDetailsBtn'), onPress: () => showEditServiceDialog(svc, dateIso) },
     ]);
   };
 
@@ -141,14 +144,14 @@ export default function MainScreen({ navigation }) {
     return (
       <View>
         <TextInput
-          placeholder="Dienstname"
+          placeholder={t('ServiceName')}
           placeholderTextColor={colors.border}
           value={name}
           onChangeText={setName}
           style={[styles.input, { color: colors.text, borderColor: colors.border }]}
         />
         <TextInput
-          placeholder="Beschreibung"
+          placeholder={t('ServiceDesc')}
           placeholderTextColor={colors.border}
           value={desc}
           onChangeText={setDesc}
@@ -157,12 +160,12 @@ export default function MainScreen({ navigation }) {
 
         <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginVertical: 8 }}>
           <TouchableOpacity style={[styles.timeButton, { borderColor: colors.border }]} onPress={() => showPicker('start')}>
-            <Text style={[styles.timeLabel, { color: colors.text }]}>Startzeit</Text>
+            <Text style={[styles.timeLabel, { color: colors.text }]}>{t('ServiceTimeStart')}</Text>
             <Text style={[styles.timeValue, { color: colors.text }]}>{start || '--:--'}</Text>
           </TouchableOpacity>
           <Text style={{ marginHorizontal: 10, color: colors.text }}>-</Text>
           <TouchableOpacity style={[styles.timeButton, { borderColor: colors.border }]} onPress={() => showPicker('end')}>
-            <Text style={[styles.timeLabel, { color: colors.text }]}>Endzeit</Text>
+            <Text style={[styles.timeLabel, { color: colors.text }]}>{t('ServiceTimeEnd')}</Text>
             <Text style={[styles.timeValue, { color: colors.text }]}>{end || '--:--'}</Text>
           </TouchableOpacity>
         </View>
@@ -202,12 +205,12 @@ export default function MainScreen({ navigation }) {
     );
 
     showDialog(
-      'Dienst bearbeiten',
+      t('msServiceEditTitle'),
       '',
       [
-        { text: 'Abbrechen', style: 'cancel' },
+        { text: t('btnCancel'), style: 'cancel' },
         {
-          text: 'Speichern',
+          text: t('msServiceEditBtn'),
           onPress: () => {
             const updatedService = {
               name: currentForm.name,
@@ -251,19 +254,19 @@ export default function MainScreen({ navigation }) {
   const handleExport = () => {
     if (isExporting.current) return;
     if (Object.keys(assignments).length === 0) {
-      showDialog('Keine Einträge', 'Es wurden noch keine Dienste eingetragen.');
+      showDialog(t('msExportTitle2'), t('msExportText2'));
       return;
     }
 
-    const message = `Folgende Dienste werden exportiert:\n\n${getExportList()}`;
+    const message = `${t('msExportText1')}\n\n${getExportList()}`;
 
     showDialog(
-      'Dienste exportieren?',
+      t('msExportTitle'),
       message,
       [
-        { text: 'Abbrechen', style: 'cancel', onPress: () => { if (isExporting.current) return; isExporting.current = false; } },
+        { text: t('btnCancel'), style: 'cancel', onPress: () => { if (isExporting.current) return; isExporting.current = false; } },
         {
-          text: 'Exportieren',
+          text: t('msExportBtn'),
           onPress: async () => {
             if (isExporting.current) return;
             isExporting.current = true;
@@ -272,15 +275,15 @@ export default function MainScreen({ navigation }) {
             if (Platform.OS === 'ios') {
               const { exportToCalendar } = await import('../utils/exportToCalendar');
               const count = await exportToCalendar(services, assignments, overrides);
-              showDialog('Export abgeschlossen', `${count} Termine wurden dem Kalender hinzugefügt.`);
+              showDialog(t('msExportComplete'), `${count} ${t('msExportCompleteIOS')}`);
             } else {
               const { exportToICS } = await import('../utils/exportToICS');
               const uri = await exportToICS(services, assignments, overrides);
-              showDialog('Export abgeschlossen', `Die Datei wurde gespeichert unter:\n${uri}`);
+              showDialog(t('msExportComplete'), `${t('msExportCompleteAndroid')}\n${uri}`);
             }
           } catch (error) {
             console.error('Export-Fehler:', error);
-            showDialog('Fehler beim Export', 'Die Datei konnte nicht erstellt oder geöffnet werden.');
+            showDialog(t('msExportErrorTitle'), t('msExportErrorText'));
           } finally {
             isExporting.current = false;
           }
@@ -292,16 +295,16 @@ export default function MainScreen({ navigation }) {
 
   const handleClearAll = () => {
     if (Object.keys(assignments).length === 0) {
-      showDialog('Keine Einträge', 'Es sind keine Einträge vorhanden, die gelöscht werden könnten.');
+      showDialog(t('msClearTitle2'), t('msClearText2'));
       return;
     }
 
     showDialog(
-      'Alle Einträge löschen?',
-      'Möchtest du wirklich alle Dienste im Kalender entfernen?',
+      t('msClearTitle1'),
+      t('msClearText1'),
       [
-        { text: 'Abbrechen', style: 'cancel' },
-        { text: 'Löschen', style: 'destructive', onPress: clearAll },
+        { text: t('btnCancel'), style: 'cancel' },
+        { text: t('msClearBtn'), style: 'destructive', onPress: clearAll },
       ]
     );
   };
@@ -311,9 +314,9 @@ export default function MainScreen({ navigation }) {
     <View style={[styles.container, { backgroundColor: colors.background, paddingBottom: 120 }]}>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={[styles.title, { color: colors.text }]}>Dienstplan</Text>
+        <Text style={[styles.title, { color: colors.text }]}>{t('msTitle2')}</Text>
         <Button
-          title="Einstellungen"
+          title={t('settingsTitle')}
           onPress={() => navigation.navigate('Settings')}
           color={colors.primary}
         />
@@ -342,10 +345,10 @@ export default function MainScreen({ navigation }) {
       {/* Bottom action bar (fixed at bottom) */}
       <View style={styles.bottomBar}>
         <View style={styles.bottomButton}>
-          <Button title="Clear" onPress={handleClearAll} color={colors.danger} />
+          <Button title={t('msClear')} onPress={handleClearAll} color={colors.danger} />
         </View>
         <View style={styles.bottomButton}>
-          <Button title="Export" onPress={handleExport} color={colors.primary} />
+          <Button title={t('msExport')} onPress={handleExport} color={colors.primary} />
         </View>
       </View>
     </View>

@@ -14,10 +14,22 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "2",
+      "bundleIdentifier": "com.haricodes.dienstplanapp",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
-      }
+      },
+      "icon": {
+        "dark": "./assets/ios-dark.png",
+        "light": "./assets/ios-light.png"
+      },
+      "locales": {
+        "en": {
+          "CFBundleDisplayName": "Shift Plan Import"
+        },
+        "de": {
+          "CFBundleDisplayName": "Dienstplan Import"
+        }
+  }
     },
     "android": {
       "adaptiveIcon": {
@@ -25,7 +37,15 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.lukas.hari.dienstplanapp"
+      "package": "com.haricodes.dienstplanapp",
+      "locales": {
+        "en": {
+          "name": "Shift Plan Import"
+        },
+        "de": {
+          "name": "Dienstplan Import"
+        }
+      }
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -34,6 +54,9 @@
       "eas": {
         "projectId": "2c3b2447-309c-454b-9f9f-da9b3c8c543c"
       }
-    }
+    },
+    "plugins": [
+      "expo-localization"
+    ]
   }
 }
