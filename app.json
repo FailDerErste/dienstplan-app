@@ -2,7 +2,7 @@
   "expo": {
     "name": "Dienstplan Import",
     "slug": "dienstplan-app",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -13,6 +13,7 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
+      "buildNumber": "1.0.1"
       "supportsTablet": true,
       "bundleIdentifier": "com.haricodes.dienstplanapp",
       "infoPlist": {
@@ -32,6 +33,8 @@
   }
     },
     "android": {
+      "versionCode": 2,
+      "versionName": "1.0.1",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
