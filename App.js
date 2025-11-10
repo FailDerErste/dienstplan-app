@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, ActivityIndicator } from 'react-native'; // 🆕 für Ladeanzeige
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { ThemeProvider } from './ThemeContext';
 import { DialogProvider } from './components/AppDialog';
 import { ServicesProvider } from './servicesContext';
@@ -46,16 +47,18 @@ export default function App() {
   }
 
   return (
-    <ThemeProvider>
-      <ServicesProvider>
-        <DialogProvider>
-          {showTutorial ? (
-            <Tutorial onFinish={() => setShowTutorial(false)} />
-          ) : (
-            <AppNavigator />
-          )}
-        </DialogProvider>
-      </ServicesProvider>
-    </ThemeProvider>
+    <SafeAreaProvider>
+      <ThemeProvider>
+        <ServicesProvider>
+          <DialogProvider>
+            {showTutorial ? (
+              <Tutorial onFinish={() => setShowTutorial(false)} />
+            ) : (
+              <AppNavigator />
+            )}
+          </DialogProvider>
+        </ServicesProvider>
+      </ThemeProvider>
+    </SafeAreaProvider>
   );
 }
