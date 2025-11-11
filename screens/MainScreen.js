@@ -1,3 +1,4 @@
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useContext, useState, useRef, useEffect } from 'react';
 import { View, Text, Button, StyleSheet, TextInput, TouchableOpacity, Platform } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -311,47 +312,49 @@ export default function MainScreen({ navigation }) {
 
   // Render
   return (
-    <View style={[styles.container, { backgroundColor: colors.background, paddingBottom: 120 }]}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={[styles.title, { color: colors.text }]}>{t('msTitle2')}</Text>
-        <Button
-          title={t('settingsTitle')}
-          onPress={() => navigation.navigate('Settings')}
-          color={colors.primary}
+    <SafeAreaView style={{ flex: 1 }} edges={['bottom']}>
+      <View style={[styles.container, { backgroundColor: colors.background, paddingBottom: 120 }]}>
+        {/* Header */}
+        <View style={styles.header}>
+          <Text style={[styles.title, { color: colors.text }]}>{t('msTitle2')}</Text>
+          <Button
+            title={t('settingsTitle')}
+            onPress={() => navigation.navigate('Settings')}
+            color={colors.primary}
+          />
+        </View>
+
+        {/* Kalender */}
+        <CalendarMonth
+          assignments={assignments}
+          services={services}
+          onDayPress={toggleDay}
+          calendarTheme={{
+            textColor: colors.text,
+            weekdayColor: colors.text,
+            todayBorderColor: colors.primary,
+            todayTextColor: colors.primary,
+          }}
         />
-      </View>
 
-      {/* Kalender */}
-      <CalendarMonth
-        assignments={assignments}
-        services={services}
-        onDayPress={toggleDay}
-        calendarTheme={{
-          textColor: colors.text,
-          weekdayColor: colors.text,
-          todayBorderColor: colors.primary,
-          todayTextColor: colors.primary,
-        }}
-      />
+        {/* Dienstliste */}
+        <ServiceList
+          services={services}
+          selectedService={selectedService}
+          setSelectedService={setSelectedService}
+        />
 
-      {/* Dienstliste */}
-      <ServiceList
-        services={services}
-        selectedService={selectedService}
-        setSelectedService={setSelectedService}
-      />
-
-      {/* Bottom action bar (fixed at bottom) */}
-      <View style={styles.bottomBar}>
-        <View style={styles.bottomButton}>
-          <Button title={t('msClear')} onPress={handleClearAll} color={colors.danger} />
-        </View>
-        <View style={styles.bottomButton}>
-          <Button title={t('msExport')} onPress={handleExport} color={colors.primary} />
+        {/* Bottom action bar (fixed at bottom) */}
+        <View style={styles.bottomBar}>
+          <View style={styles.bottomButton}>
+            <Button title={t('msClear')} onPress={handleClearAll} color={colors.danger} />
+          </View>
+          <View style={styles.bottomButton}>
+            <Button title={t('msExport')} onPress={handleExport} color={colors.primary} />
+          </View>
         </View>
       </View>
-    </View>
+    </SaveAreaView>
   );
 }
 
