@@ -1,6 +1,7 @@
 // SettingsScreen: A screen to configure and manage and display the list of services
 // (Dienste) for the Dienstplan app. It supports creating, editing, and deleting services,
 // choosing a theme, switching time formats (24h vs 12h), and setting a color for each service.
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useContext, useState, useRef, useEffect } from 'react';
 import {
   View,
@@ -338,182 +339,184 @@ export default function SettingsScreen() {
   };
 
   return (
-    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
-      <ScrollView
-        ref={scrollRef}
-        onContentSizeChange={(_, h) => setContentHeight(h)}
-        onLayout={(e) => setContainerHeight(e.nativeEvent.layout.height)}
-        contentContainerStyle={[styles.scrollContainer, { backgroundColor: colors.background, paddingBottom: 60 }]}
-        keyboardShouldPersistTaps="handled"
-      >
-        <View style={[styles.container, { backgroundColor: colors.background }]}>
-          {/* <Text style={[styles.title, { color: colors.text }]}>{t('settingsTitle2')}</Text> */}
+    <SafeAreaView style={{ flex: 1 }} edges={['bottom']}>
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
+        <ScrollView
+          ref={scrollRef}
+          onContentSizeChange={(_, h) => setContentHeight(h)}
+          onLayout={(e) => setContainerHeight(e.nativeEvent.layout.height)}
+          contentContainerStyle={[styles.scrollContainer, { backgroundColor: colors.background, paddingBottom: 60 }]}
+          keyboardShouldPersistTaps="handled"
+        >
+          <View style={[styles.container, { backgroundColor: colors.background }]}>
+            {/* <Text style={[styles.title, { color: colors.text }]}>{t('settingsTitle2')}</Text> */}
 
-          {/* Theme Auswahl */}
-          <View style={{ marginBottom: 12 }}>
-            <Text style={[styles.label, { color: colors.text }]}>{t('settingsTheme')}</Text>
-            <View style={[styles.pickerContainer, { borderColor: colors.border }]}>
-              <Picker
-                selectedValue={themeMode}
-                onValueChange={(value) => setTheme(value)}
-                style={{ color: colors.text }}
-                dropdownIconColor={colors.text}
-              >
-                <Picker.Item label={t('settingsThemeSystem')} value="system" />
-                <Picker.Item label={t('settingsThemeLight')} value="light" />
-                <Picker.Item label={t('settingsThemeDarkgray')} value="darkgray" />
-                <Picker.Item label={t('settingsThemeDark')} value="dark" />
-              </Picker>
+            {/* Theme Auswahl */}
+            <View style={{ marginBottom: 12 }}>
+              <Text style={[styles.label, { color: colors.text }]}>{t('settingsTheme')}</Text>
+              <View style={[styles.pickerContainer, { borderColor: colors.border }]}>
+                <Picker
+                  selectedValue={themeMode}
+                  onValueChange={(value) => setTheme(value)}
+                  style={{ color: colors.text }}
+                  dropdownIconColor={colors.text}
+                >
+                  <Picker.Item label={t('settingsThemeSystem')} value="system" />
+                  <Picker.Item label={t('settingsThemeLight')} value="light" />
+                  <Picker.Item label={t('settingsThemeDarkgray')} value="darkgray" />
+                  <Picker.Item label={t('settingsThemeDark')} value="dark" />
+                </Picker>
+              </View>
             </View>
-          </View>
 
-          {/* Sprache */}
-          <View style={{ marginBottom: 12 }}>
-            <Text style={[styles.label, { color: colors.text }]}>Sprache</Text>
-            <View style={[styles.pickerContainer, { borderColor: colors.border }]}>
-              <Picker
-                selectedValue={currentLanguage}
-                onValueChange={handleLanguageChange}
-                style={{ color: colors.text }}
-                dropdownIconColor={colors.text}
-              >
-                <Picker.Item label="Deutsch" value="de" />
-                <Picker.Item label="English" value="en" />
-              </Picker>
+            {/* Sprache */}
+            <View style={{ marginBottom: 12 }}>
+              <Text style={[styles.label, { color: colors.text }]}>Sprache</Text>
+              <View style={[styles.pickerContainer, { borderColor: colors.border }]}>
+                <Picker
+                  selectedValue={currentLanguage}
+                  onValueChange={handleLanguageChange}
+                  style={{ color: colors.text }}
+                  dropdownIconColor={colors.text}
+                >
+                  <Picker.Item label="Deutsch" value="de" />
+                  <Picker.Item label="English" value="en" />
+                </Picker>
+              </View>
             </View>
-          </View>
 
-          {/* Zeitformat */}
-          <View style={styles.formatRow}>
-            <Text style={[styles.formatLabel, { color: colors.text }]}>24-Stunden-Format</Text>
-            <Switch value={is24h} onValueChange={toggleFormat} />
-          </View>
+            {/* Zeitformat */}
+            <View style={styles.formatRow}>
+              <Text style={[styles.formatLabel, { color: colors.text }]}>24-Stunden-Format</Text>
+              <Switch value={is24h} onValueChange={toggleFormat} />
+            </View>
 
-          {/* Tutorial Rewatch Button */}
-          <View style={{ marginBottom: 12 }}>
+            {/* Tutorial Rewatch Button */}
+            <View style={{ marginBottom: 12 }}>
+              <Button
+                title={t('settingsTutorial')}
+                onPress={handleRewatchTutorial}
+                color={colors.primary}
+              />
+            </View>
+
+            <Text style={[{ marginTop: 40 }, styles.title, { color: colors.text }]}>Dienste</Text>
+
+            {/* Formular-Button */}
             <Button
-              title={t('settingsTutorial')}
-              onPress={handleRewatchTutorial}
-              color={colors.primary}
+              title={showAddForm ? t('btnCancel') : t('settingsAddService')}
+              onPress={() => (showAddForm ? resetForm() : setShowAddForm(true))}
+              color={showAddForm ? colors.border : colors.primary}
             />
-          </View>
 
-          <Text style={[{ marginTop: 40 }, styles.title, { color: colors.text }]}>Dienste</Text>
-
-          {/* Formular-Button */}
-          <Button
-            title={showAddForm ? t('btnCancel') : t('settingsAddService')}
-            onPress={() => (showAddForm ? resetForm() : setShowAddForm(true))}
-            color={showAddForm ? colors.border : colors.primary}
-          />
-
-          {/* Formular */}
-          {showAddForm && (
-            <Animated.View
-              style={[
-                styles.addForm,
-                { opacity: fadeAnim, transform: [{ translateY: slideAnim }], backgroundColor: colors.card, borderColor: colors.border },
-              ]}
-            >
-              <TextInput
-                placeholder={t('ServiceName')}
-                placeholderTextColor={colors.border}
-                value={name}
-                onChangeText={setName}
-                style={[styles.input, { color: colors.text, borderColor: colors.border }]}
-              />
-              <TextInput
-                placeholder={t('ServiceDesc')}
-                placeholderTextColor={colors.border}
-                value={desc}
-                onChangeText={setDesc}
-                style={[styles.input, { color: colors.text, borderColor: colors.border }]}
-              />
-
-              <View style={{ marginBottom: 15 }}>
-                <Text style={[styles.label, { color: colors.text }]}>Farbe</Text>
-                <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-around' }}>
-                  {colorOptions.map((option) => (
-                    <TouchableOpacity
-                      key={option.color}
-                      onPress={() => setColor(option.color)}
-                      style={{
-                        width: 40,
-                        height: 40,
-                        backgroundColor: option.color,
-                        borderRadius: 20,
-                        margin: 5,
-                        borderWidth: color === option.color ? 3 : 1,
-                        borderColor: color === option.color ? '#000' : '#ccc',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                      }}
-                    >
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              </View>
-
-              <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginVertical: 8 }}>
-                <TouchableOpacity style={[styles.timeButton, { borderColor: colors.border }]} onPress={() => showPicker('start')}>
-                  <Text style={[styles.timeLabel, { color: colors.text }]}>{t('ServiceTimeStart')}</Text>
-                  <Text style={[styles.timeValue, { color: colors.text }]}>{start || '--:--'}</Text>
-                </TouchableOpacity>
-                <Text style={{ marginHorizontal: 10, color: colors.text }}>-</Text>
-                <TouchableOpacity style={[styles.timeButton, { borderColor: colors.border }]} onPress={() => showPicker('end')}>
-                  <Text style={[styles.timeLabel, { color: colors.text }]}>{t('ServiceTimeEnd')}</Text>
-                  <Text style={[styles.timeValue, { color: colors.text }]}>{end || '--:--'}</Text>
-                </TouchableOpacity>
-              </View>
-
-              {pickerVisible && (
-                <DateTimePicker
-                  value={tempTime}
-                  mode="time"
-                  is24Hour={is24h}
-                  display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                  onChange={onTimeChange}
+            {/* Formular */}
+            {showAddForm && (
+              <Animated.View
+                style={[
+                  styles.addForm,
+                  { opacity: fadeAnim, transform: [{ translateY: slideAnim }], backgroundColor: colors.card, borderColor: colors.border },
+                ]}
+              >
+                <TextInput
+                  placeholder={t('ServiceName')}
+                  placeholderTextColor={colors.border}
+                  value={name}
+                  onChangeText={setName}
+                  style={[styles.input, { color: colors.text, borderColor: colors.border }]}
                 />
-              )}
+                <TextInput
+                  placeholder={t('ServiceDesc')}
+                  placeholderTextColor={colors.border}
+                  value={desc}
+                  onChangeText={setDesc}
+                  style={[styles.input, { color: colors.text, borderColor: colors.border }]}
+                />
 
-              <Button title={editId ? t('settingsEditServiceSave') : t('settingsAddServiceSave')} onPress={handleSave} color={colors.success} />
-            </Animated.View>
-          )}
-
-          {/* Liste */}
-          <View style={{ marginTop: 20}}>
-            {services.length === 0 ? (
-              <Text style={{ color: colors.text, textAlign: 'center' }}>Noch keine Dienste vorhanden</Text>
-            ) : (
-              services.map((item) => (
-                <TouchableOpacity key={item.id} onPress={() => handleEdit(item)}>
-                  {/* Left: color dot and name (color indicator + label on the left) */}
-                  <View style={[styles.serviceItem, { borderBottomColor: colors.border }, editId === item.id && { backgroundColor: colors.card }]}> 
-                    <View style={[styles.leftCol, { width: colWidths.left }]}> 
-                      <View style={{ width: 20, height: 20, backgroundColor: item.color || '#2E7D32', borderRadius: 10, marginRight: 10 }} />
-                      <Text style={[styles.serviceText, { color: colors.text }]} numberOfLines={1} ellipsizeMode="tail">
-                        {item.name}
-                      </Text>
-                    </View>
-                    {/* Fixed-width middle column for time range */}
-                  <View style={[styles.midCol, { width: colWidths.mid, marginRight: -0.15 * colWidths.mid }]}>
-                    {renderTimeCell(item.start, item.end)}
-                  </View>
-                      {/* Right: Fixed-width delete button */}
+                <View style={{ marginBottom: 15 }}>
+                  <Text style={[styles.label, { color: colors.text }]}>Farbe</Text>
+                  <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-around' }}>
+                    {colorOptions.map((option) => (
                       <TouchableOpacity
-                        style={[styles.deleteButton, { width: colWidths.right }]}
-                        onPress={() => confirmDelete(item.id, item.name)}
+                        key={option.color}
+                        onPress={() => setColor(option.color)}
+                        style={{
+                          width: 40,
+                          height: 40,
+                          backgroundColor: option.color,
+                          borderRadius: 20,
+                          margin: 5,
+                          borderWidth: color === option.color ? 3 : 1,
+                          borderColor: color === option.color ? '#000' : '#ccc',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}
                       >
-                        <Text style={[styles.deleteText, { color: colors.danger }]}>−</Text>
                       </TouchableOpacity>
-                    </View>
+                    ))}
+                  </View>
+                </View>
+
+                <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginVertical: 8 }}>
+                  <TouchableOpacity style={[styles.timeButton, { borderColor: colors.border }]} onPress={() => showPicker('start')}>
+                    <Text style={[styles.timeLabel, { color: colors.text }]}>{t('ServiceTimeStart')}</Text>
+                    <Text style={[styles.timeValue, { color: colors.text }]}>{start || '--:--'}</Text>
                   </TouchableOpacity>
-              ))
+                  <Text style={{ marginHorizontal: 10, color: colors.text }}>-</Text>
+                  <TouchableOpacity style={[styles.timeButton, { borderColor: colors.border }]} onPress={() => showPicker('end')}>
+                    <Text style={[styles.timeLabel, { color: colors.text }]}>{t('ServiceTimeEnd')}</Text>
+                    <Text style={[styles.timeValue, { color: colors.text }]}>{end || '--:--'}</Text>
+                  </TouchableOpacity>
+                </View>
+
+                {pickerVisible && (
+                  <DateTimePicker
+                    value={tempTime}
+                    mode="time"
+                    is24Hour={is24h}
+                    display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                    onChange={onTimeChange}
+                  />
+                )}
+
+                <Button title={editId ? t('settingsEditServiceSave') : t('settingsAddServiceSave')} onPress={handleSave} color={colors.success} />
+              </Animated.View>
             )}
+
+            {/* Liste */}
+            <View style={{ marginTop: 20}}>
+              {services.length === 0 ? (
+                <Text style={{ color: colors.text, textAlign: 'center' }}>Noch keine Dienste vorhanden</Text>
+              ) : (
+                services.map((item) => (
+                  <TouchableOpacity key={item.id} onPress={() => handleEdit(item)}>
+                    {/* Left: color dot and name (color indicator + label on the left) */}
+                    <View style={[styles.serviceItem, { borderBottomColor: colors.border }, editId === item.id && { backgroundColor: colors.card }]}> 
+                      <View style={[styles.leftCol, { width: colWidths.left }]}> 
+                        <View style={{ width: 20, height: 20, backgroundColor: item.color || '#2E7D32', borderRadius: 10, marginRight: 10 }} />
+                        <Text style={[styles.serviceText, { color: colors.text }]} numberOfLines={1} ellipsizeMode="tail">
+                          {item.name}
+                        </Text>
+                      </View>
+                      {/* Fixed-width middle column for time range */}
+                    <View style={[styles.midCol, { width: colWidths.mid, marginRight: -0.15 * colWidths.mid }]}>
+                      {renderTimeCell(item.start, item.end)}
+                    </View>
+                        {/* Right: Fixed-width delete button */}
+                        <TouchableOpacity
+                          style={[styles.deleteButton, { width: colWidths.right }]}
+                          onPress={() => confirmDelete(item.id, item.name)}
+                        >
+                          <Text style={[styles.deleteText, { color: colors.danger }]}>−</Text>
+                        </TouchableOpacity>
+                      </View>
+                    </TouchableOpacity>
+                ))
+              )}
+            </View>
           </View>
-        </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
 
