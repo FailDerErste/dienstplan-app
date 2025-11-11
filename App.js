@@ -41,7 +41,7 @@ export default function App() {
 
   useEffect(() => {
     // Dynamische Anpassung der Navigationsleiste
-    NavigationBar.setBackgroundColorAsync(colors.background);
+    NavigationBar.setBackgroundColorAsync(colors.card);
     NavigationBar.setButtonStyleAsync(mode.dark || mode.darkgrey ? 'light' : 'dark');
   }, [mode]); // <- reagiert bei jedem Theme-Wechsel
 
