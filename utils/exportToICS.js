@@ -52,7 +52,7 @@ export async function exportToICS(services, assignments, overrides) {
 
     icsContent += [
       'BEGIN:VEVENT',
-      `UID:${serviceId}_${date.replace(/-/g, '')}@dienstplan`,
+      `UID:${serviceId}_${date.replace(/-/g, '')}_${Math.random().toString(36).substring(2,8)}@dienstplan`,
       `DTSTAMP:${dayjs().utc().format('YYYYMMDDTHHmmss')}Z`,
       `SUMMARY:${summary}`,
       `DESCRIPTION:${displayDesc}`,
