@@ -13,10 +13,21 @@ import onboardingController from './utils/onboardingController';
 // 🆕 Import i18n-Initialisierung
 import { initI18n } from './i18n';
 
+function NavigationBarSync() {
+  const { colors, mode } = useTheme();
+
+  useEffect(() => {
+    // Farbe & Stil der Android-Navigationsleiste dynamisch anpassen
+    NavigationBar.setBackgroundColorAsync(colors.card);
+    NavigationBar.setButtonStyleAsync(mode.dark || mode.darkgrey ? 'light' : 'dark');
+  }, [colors, mode]); // <- reagiert bei jedem Theme-Wechsel
+
+  return null; // keine sichtbare Ausgabe
+}
+
 export default function App() {
   const [showTutorial, setShowTutorial] = useState(true);
   const [isReady, setIsReady] = useState(false);
-  const { colors, mode } = useTheme();
 
   useEffect(() => {
     const setup = async () => {
@@ -39,12 +50,6 @@ export default function App() {
     return unsubscribe;
   }, []);
 
-  useEffect(() => {
-    // Dynamische Anpassung der Navigationsleiste
-    NavigationBar.setBackgroundColorAsync(colors.card);
-    NavigationBar.setButtonStyleAsync(mode.dark || mode.darkgrey ? 'light' : 'dark');
-  }, [mode]); // <- reagiert bei jedem Theme-Wechsel
-
   // 🆕 Ladeanzeige, bis i18n und Tutorialstatus bereit sind
   if (!isReady) {
     return (
@@ -57,6 +62,7 @@ export default function App() {
   return (
     <SafeAreaProvider>
       <ThemeProvider>
+        <NavigationBarSync />
         <ServicesProvider>
           <DialogProvider>
             {showTutorial ? (
