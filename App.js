@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, ActivityIndicator } from 'react-native'; // 🆕 für Ladeanzeige
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { ThemeProvider } from './ThemeContext';
+import { ThemeProvider, useTheme } from './ThemeContext';
 import { DialogProvider } from './components/AppDialog';
 import { ServicesProvider } from './servicesContext';
 import AppNavigator from './AppNavigator';
@@ -15,6 +15,7 @@ import { initI18n } from './i18n';
 export default function App() {
   const [showTutorial, setShowTutorial] = useState(true);
   const [isReady, setIsReady] = useState(false);
+  const { colors, mode } = useTheme();
 
   useEffect(() => {
     const setup = async () => {
@@ -36,6 +37,12 @@ export default function App() {
 
     return unsubscribe;
   }, []);
+
+  useEffect(() => {
+    // Dynamische Anpassung der Navigationsleiste
+    NavigationBar.setBackgroundColorAsync(colors.background);
+    NavigationBar.setButtonStyleAsync(mode.dark || mode.darkgrey ? 'light' : 'dark');
+  }, [mode]); // <- reagiert bei jedem Theme-Wechsel
 
   // 🆕 Ladeanzeige, bis i18n und Tutorialstatus bereit sind
   if (!isReady) {
