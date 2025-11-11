@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, ActivityIndicator } from 'react-native'; // 🆕 für Ladeanzeige
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { ThemeProvider, useTheme } from './ThemeContext';
+import * as NavigationBar from 'expo-navigation-bar';
 import { DialogProvider } from './components/AppDialog';
 import { ServicesProvider } from './servicesContext';
 import AppNavigator from './AppNavigator';
