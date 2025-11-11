@@ -8,7 +8,9 @@ import { useTranslation } from 'react-i18next';
 
 export default function Tutorial({ onFinish }) {
   const { t } = useTranslation();
-  const insets = useSafeAreaInsets(); // 👈 Dynamische Safe-Area-Abstände
+  //const insets = useSafeAreaInsets(); // 👈 Dynamische Safe-Area-Abstände
+  const { bottom } = useSafeAreaInsets();
+  const bottomBarHeight = bottom > 0 ? 80 + bottom : 150;
 
   const handleFinish = () => {
     setTutorialSeen();
@@ -19,10 +21,11 @@ export default function Tutorial({ onFinish }) {
     <View style={styles.outerContainer}>
       <Onboarding
         // 🔹 Kein Schatten oben/unten
-        bottomBarHighlight={false}
+        bottomBarHighlight={80}
 
         // 🔹 Der Container hat unten dynamisch Platz
-        containerStyles={{ paddingBottom: insets.bottom + 10 }}
+        //containerStyles={{ paddingBottom: insets.bottom + 10 }}
+        containerStyles={{ paddingBottom: bottom + 10 }}
 
         // 🔹 Verhalten bei Fertigstellen / Überspringen
         onSkip={handleFinish}

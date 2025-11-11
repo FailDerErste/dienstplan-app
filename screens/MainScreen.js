@@ -354,7 +354,7 @@ export default function MainScreen({ navigation }) {
           </View>
         </View>
       </View>
-    </SaveAreaView>
+    </SafeAreaView>
   );
 }
 

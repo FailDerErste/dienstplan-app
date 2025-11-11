@@ -1,40 +1,51 @@
 import React, { useEffect, useState } from 'react';
-import { View, ActivityIndicator } from 'react-native'; // 🆕 für Ladeanzeige
+import { View, ActivityIndicator, Platform } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { ThemeProvider, useTheme } from './ThemeContext';
 import * as NavigationBar from 'expo-navigation-bar';
+import { StatusBar } from 'expo-status-bar'; // ✅ Für iOS & Android Statusbar
 import { DialogProvider } from './components/AppDialog';
 import { ServicesProvider } from './servicesContext';
 import AppNavigator from './AppNavigator';
 import Tutorial from './components/Tutorial';
 import { hasSeenTutorial } from './utils/tutorialStorage';
 import onboardingController from './utils/onboardingController';
-
-// 🆕 Import i18n-Initialisierung
 import { initI18n } from './i18n';
 
-function NavigationBarSync() {
+// 🔹 Hilfs-Komponente für dynamische Anpassung von StatusBar + NavigationBar
+function SystemBarsSync() {
   const { colors, mode } = useTheme();
 
   useEffect(() => {
-    // Farbe & Stil der Android-Navigationsleiste dynamisch anpassen
-    NavigationBar.setBackgroundColorAsync(colors.card);
-    NavigationBar.setButtonStyleAsync(mode.dark || mode.darkgrey ? 'light' : 'dark');
-  }, [colors, mode]); // <- reagiert bei jedem Theme-Wechsel
+    // ✅ StatusBar (iOS + Android)
+    // Farbe des Textes in der Statusbar je nach Theme
+    // "light" = helle Schrift (für dunkles Theme), "dark" = dunkle Schrift (für helles Theme)
+    const statusBarStyle = mode.dark || mode.darkgrey ? 'light' : 'dark';
 
-  return null; // keine sichtbare Ausgabe
+    // Falls Plattform Android → Navigationsleiste anpassen
+    if (Platform.OS === 'android') {
+      try {
+        NavigationBar.setBackgroundColorAsync(colors.card);
+        NavigationBar.setButtonStyleAsync(statusBarStyle);
+      } catch (e) {
+        console.warn('NavigationBar Anpassung nicht unterstützt:', e);
+      }
+    }
+
+    // Bei iOS reicht das StatusBar-Element im JSX (siehe unten)
+  }, [colors, mode]);
+
+  return <StatusBar style={mode.dark || mode.darkgrey ? 'light' : 'dark'} />;
 }
 
+// 🔹 Hauptkomponente
 export default function App() {
   const [showTutorial, setShowTutorial] = useState(true);
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
     const setup = async () => {
-      // 🆕 Sprache initialisieren
-      await initI18n();
-
-      // Tutorial-Status prüfen
+      await initI18n(); // 🌐 Sprache initialisieren
       const seen = await hasSeenTutorial();
       setShowTutorial(!seen);
       setIsReady(true);
@@ -42,7 +53,7 @@ export default function App() {
 
     setup();
 
-    // Subscribe to onboarding restart events
+    // Reaktion auf „Tutorial neu starten“
     const unsubscribe = onboardingController.subscribe(() => {
       setShowTutorial(true);
     });
@@ -50,7 +61,7 @@ export default function App() {
     return unsubscribe;
   }, []);
 
-  // 🆕 Ladeanzeige, bis i18n und Tutorialstatus bereit sind
+  // ⏳ Ladeanzeige, bis i18n + Tutorialstatus bereit sind
   if (!isReady) {
     return (
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
@@ -59,10 +70,11 @@ export default function App() {
     );
   }
 
+  // 🌈 App-Rendering mit dynamischer Systemleistensteuerung
   return (
     <SafeAreaProvider>
       <ThemeProvider>
-        <NavigationBarSync />
+        <SystemBarsSync />
         <ServicesProvider>
           <DialogProvider>
             {showTutorial ? (
