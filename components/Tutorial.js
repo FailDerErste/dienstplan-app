@@ -2,13 +2,15 @@ import React from 'react';
 import { Image, Dimensions, View, StyleSheet } from 'react-native';
 const { width, height } = Dimensions.get('window');
 import Onboarding from 'react-native-onboarding-swiper';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { setTutorialSeen } from '../utils/tutorialStorage';
 import { useTranslation } from 'react-i18next';
 
 export default function Tutorial({ onFinish }) {
   const { t } = useTranslation();
+  //const insets = useSafeAreaInsets(); // 👈 Dynamische Safe-Area-Abstände
   const { bottom } = useSafeAreaInsets();
+  const bottomBarHeight = bottom > 0 ? 80 + bottom : 100;
 
   const handleFinish = () => {
     setTutorialSeen();
@@ -16,10 +18,11 @@ export default function Tutorial({ onFinish }) {
   };
 
   return (
-    <SafeAreaView style={styles.outerContainer} edges={['bottom']}>
+    <View style={styles.outerContainer}>
       <Onboarding
         // 🔹 Kein Schatten oben/unten
-        //bottomBarHighlight={80}
+        bottomBarHighlight={0}
+        bottomBarHeight={ bottomBarHeight }
 
         // 🔹 Der Container hat unten dynamisch Platz
         containerStyles={{ paddingBottom: bottom + 10 }}
@@ -98,7 +101,7 @@ export default function Tutorial({ onFinish }) {
           },
         ]}
       />
-    </SafeAreaView>
+    </View>
   );
 }
 
