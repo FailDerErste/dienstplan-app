@@ -8,9 +8,6 @@ import { useTranslation } from 'react-i18next';
 
 export default function Tutorial({ onFinish }) {
   const { t } = useTranslation();
-  //const insets = useSafeAreaInsets(); // 👈 Dynamische Safe-Area-Abstände
-  const { bottom } = useSafeAreaInsets();
-  const bottomBarHeight = bottom > 0 ? 80 + bottom : 150;
 
   const handleFinish = () => {
     setTutorialSeen();
@@ -18,7 +15,7 @@ export default function Tutorial({ onFinish }) {
   };
 
   return (
-    <View style={styles.outerContainer}>
+    <SafeAreaView style={{ flex: 1 }} edges={['bottom']}>
       <Onboarding
         // 🔹 Kein Schatten oben/unten
         bottomBarHighlight={80}
@@ -101,7 +98,7 @@ export default function Tutorial({ onFinish }) {
           },
         ]}
       />
-    </View>
+    </SafeAreaView>
   );
 }
 
